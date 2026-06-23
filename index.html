@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>講義まとめ</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1c2230; --sub:#5a6473;
+    --line:#e2e7f0; --accent:#3a5bd9; --accent-soft:#eaeffb;
+    --ok:#1f9d6b; --warn:#d98324; --soon:#e0552b; --over:#d12f3f;
+    --shadow:0 2px 10px rgba(30,40,70,.08);
+    --radius:14px;
+    /* フォントは全体的に一回り大きめ（資料共通の方針） */
+    --fs-base:18px; --fs-lg:21px; --fs-xl:27px; --fs-sm:15.5px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+    font-size:var(--fs-base); line-height:1.7;
+  }
+  header.app{
+    position:sticky; top:0; z-index:20; background:rgba(255,255,255,.92);
+    backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
+    padding:14px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  }
+  header.app h1{font-size:var(--fs-xl); margin:0; letter-spacing:.02em; cursor:pointer}
+  header.app .term{color:var(--sub); font-size:var(--fs-sm); font-weight:600;
+    background:var(--accent-soft); padding:3px 12px; border-radius:999px}
+  nav.tabs{display:flex; gap:8px; margin-left:auto; flex-wrap:wrap}
+  nav.tabs button, .toolbtn{
+    font-size:var(--fs-sm); font-family:inherit; cursor:pointer;
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+    padding:8px 16px; border-radius:999px; font-weight:600;
+  }
+  nav.tabs button.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+  .toolbtn:hover, nav.tabs button:hover{border-color:var(--accent)}
+  main{max-width:1180px; margin:0 auto; padding:26px 22px 80px}
+
+  /* ===== 詳細ビュー ===== */
+  .back{font-size:var(--fs-sm); font-weight:700; color:var(--accent); cursor:pointer;
+    border:none; background:none; padding:6px 0}
+  .detail-head{display:flex; align-items:flex-start; gap:16px; margin:8px 0 18px; flex-wrap:wrap}
+  .detail-head h2{margin:0; font-size:var(--fs-xl)}
+  .infogrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:8px}
+  .infobox{background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow)}
+  .infobox .lab{font-size:13.5px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px}
+  .infobox .val{font-size:var(--fs-base); word-break:break-word}
+  .infobox a{color:var(--accent); text-decoration:none; font-weight:600}
+  .infobox a:hover{text-decoration:underline}
+  .copybtn{margin-left:8px; font-size:13px; padding:2px 9px; border:1px solid var(--line);
+    border-radius:8px; background:#fff; cursor:pointer; font-family:inherit}
+  .copybtn:hover{border-color:var(--accent); color:var(--accent)}
+
+  h3.sec{font-size:var(--fs-lg); margin:28px 0 14px; display:flex; align-items:center; gap:10px}
+  h3.sec .line{flex:1; height:1px; background:var(--line)}
+
+  /* ===== 課題・レポート（目立つセクション） ===== */
+  .assign-wrap{background:#fffdf5; border:2px solid #f1e2b8; border-radius:16px; padding:16px 18px 6px; margin-bottom:8px; box-shadow:var(--shadow)}
+  .assign-wrap .ahead{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+  .assign-wrap .ahead h3{margin:0; font-size:var(--fs-lg)}
+  .assign-wrap .ahead .pill{font-size:13.5px; font-weight:700; background:#f6e6b3; color:#8a6d12; padding:2px 12px; border-radius:999px}
+  .assign{display:flex; align-items:center; gap:14px; background:#fff; border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(30,40,70,.05)}
+  .assign.is-done{opacity:.6}
+  .assign .acolor{width:6px; align-self:stretch; border-radius:6px; min-height:42px}
+  .assign .amain{flex:1; min-width:0}
+  .assign .atitle{font-size:var(--fs-base); font-weight:700; line-height:1.4}
+  .assign.is-done .atitle{text-decoration:line-through}
+  .assign .anote{font-size:14px; color:var(--sub); margin-top:3px; white-space:pre-wrap}
+  .assign .aduedate{font-size:14px; color:var(--sub); margin-top:3px}
+  .due-pill{flex:0 0 auto; text-align:center; font-weight:800; font-size:15px; padding:8px 14px;
+    border-radius:12px; min-width:96px; line-height:1.25}
+  .due-pill small{display:block; font-size:12px; font-weight:700; opacity:.9}
+  .due-ok{background:#e7f7ef; color:var(--ok)}
+  .due-warn{background:#fcf3e3; color:var(--warn)}
+  .due-soon{background:#fde8df; color:var(--soon)}
+  .due-over{background:#fde3e6; color:var(--over)}
+  .due-done{background:#eef1f6; color:var(--sub)}
+  .due-none{background:#eef1f6; color:var(--sub)}
+  .assign .aacts{display:flex; flex-direction:column; gap:6px}
+  .assign .aacts button{font-size:13px; font-family:inherit; cursor:pointer; background:none; border:none;
+    color:var(--sub); font-weight:700; padding:2px 0; white-space:nowrap}
+  .assign .aacts button:hover{color:var(--accent)}
+  .assign .aacts button.del:hover{color:var(--over)}
+  .addbtn.small{padding:11px; font-size:var(--fs-sm); margin-bottom:10px}
+
+  /* 授業の記録 */
+  .session{background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+    margin-bottom:14px; overflow:hidden}
+  .session .shead{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap}
+  .session .no{font-weight:800; font-size:var(--fs-lg); color:var(--accent)}
+  .session .date{color:var(--sub); font-size:var(--fs-sm); font-weight:600}
+  .session .place{color:var(--sub); font-size:var(--fs-sm)}
+  .session .sub-tag{margin-left:auto; font-size:13.5px; font-weight:700; padding:3px 12px; border-radius:999px}
+  .sub-tag.done{background:#eafaf2; color:var(--ok)}
+  .sub-tag.todo{background:#fdf1e3; color:var(--warn)}
+  .session .content{padding:14px 16px; white-space:pre-wrap; line-height:1.75}
+  .session .actions{padding:0 16px 12px; display:flex; gap:14px}
+  .session .actions button{font-size:13.5px; font-family:inherit; cursor:pointer; background:none;
+    border:none; color:var(--sub); font-weight:600; padding:4px 0}
+  .session .actions button:hover{color:var(--accent)}
+  .session .actions button.del:hover{color:var(--over)}
+  /* 各回の記録セクション（授業内容メモ／課題／グループワークまとめ） */
+  .seg-h{display:block; font-weight:800; font-size:14px; color:var(--accent); margin:0 0 5px; letter-spacing:.02em}
+  .session .content + .content{border-top:1px dashed var(--line)}
+  .session .content .muted{color:var(--sub)}
+  .seg-toggle{align-items:center}
+  .seg-toggle .lab{font-size:13.5px; font-weight:700; color:var(--sub); margin-right:2px}
+  .session-edit{border:2px solid var(--accent) !important}
+
+  .addbtn{width:100%; padding:14px; border:2px dashed var(--line); background:#fff; border-radius:12px;
+    font-size:var(--fs-base); font-family:inherit; font-weight:700; color:var(--accent); cursor:pointer}
+  .addbtn:hover{border-color:var(--accent); background:var(--accent-soft)}
+
+  /* フォーム */
+  .form{background:#fff; border:1px solid var(--accent); border-radius:12px; padding:18px; margin-bottom:16px; box-shadow:var(--shadow)}
+  .form .fr{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px}
+  .form label{display:flex; flex-direction:column; font-size:13.5px; font-weight:700; color:var(--sub); gap:5px}
+  .form input[type=text], .form input[type=date], .form textarea{
+    font-family:inherit; font-size:var(--fs-base); padding:9px 12px; border:1px solid var(--line);
+    border-radius:9px; background:#fbfcff; color:var(--ink); width:100%}
+  .form textarea{min-height:90px; resize:vertical; line-height:1.7}
+  .form .full{flex:1 1 100%}
+  .form .w-sm{flex:0 0 110px} .form .w-md{flex:0 0 190px}
+  .form .grow{flex:1 1 220px}
+  .form .checkrow{flex-direction:row; align-items:center; gap:8px; font-size:var(--fs-sm); color:var(--ink)}
+  .form .checkrow input{width:18px; height:18px}
+  .form .formbtns{display:flex; gap:10px}
+  .btn-primary{background:var(--accent); color:#fff; border:none; padding:10px 22px; border-radius:9px;
+    font-size:var(--fs-base); font-weight:700; font-family:inherit; cursor:pointer}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .btn-ghost{background:none; border:1px solid var(--line); padding:10px 20px; border-radius:9px;
+    font-size:var(--fs-base); font-family:inherit; cursor:pointer}
+  .form select{font-family:inherit; font-size:var(--fs-base); padding:9px 12px; border:1px solid var(--line);
+    border-radius:9px; background:#fbfcff; color:var(--ink); width:100%}
+  .form input[type=color]{width:100%; border:1px solid var(--line); border-radius:9px; background:#fff; cursor:pointer}
+  /* ヘッダー操作・追加ボタン */
+  .head-acts{display:flex; gap:10px; margin-left:auto; flex-wrap:wrap}
+  .head-acts button{font-size:13.5px; font-family:inherit; cursor:pointer; border:1px solid var(--line);
+    background:#fff; border-radius:8px; padding:7px 16px; font-weight:700; color:var(--sub)}
+  .head-acts button:hover{border-color:var(--accent); color:var(--accent)}
+  .head-acts button.del:hover{border-color:var(--over); color:var(--over)}
+  .cell-add{border:1px dashed #cfd6e4; background:none; color:#aab2c2; border-radius:8px;
+    width:34px; height:34px; cursor:pointer; font-size:18px; font-weight:700; line-height:1}
+  .cell-add:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+  .add-course-btn{margin-top:16px; padding:12px 22px; border:1px solid var(--accent); background:#fff;
+    color:var(--accent); border-radius:10px; font-size:var(--fs-sm); font-weight:700; font-family:inherit; cursor:pointer}
+  .add-course-btn:hover{background:var(--accent-soft)}
+
+  /* ===== 時間割 ===== */
+  table.tt{width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:var(--shadow)}
+  table.tt th, table.tt td{border:1px solid var(--line); padding:10px; text-align:center; vertical-align:middle}
+  table.tt th{background:var(--accent-soft); color:var(--accent); font-size:var(--fs-sm)}
+  table.tt td.period{background:#f7f9fd; color:var(--sub); font-size:13.5px; font-weight:700; white-space:nowrap}
+  table.tt td .cell{font-size:var(--fs-sm); font-weight:700; cursor:pointer; color:var(--ink)}
+  table.tt td .cell small{display:block; color:var(--sub); font-weight:500; font-size:12.5px}
+  table.tt td.has{background:#fff}
+  .note-int{margin-top:14px; font-size:var(--fs-sm); color:var(--sub); background:#fff;
+    border:1px solid var(--line); border-radius:10px; padding:12px 16px}
+  .note-int b{color:var(--ink)}
+
+  /* 直近の締切パネル */
+  .due-panel{background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:16px 18px; margin-bottom:24px}
+  .due-panel h3{margin:0 0 12px; font-size:var(--fs-lg); display:flex; align-items:center; gap:8px}
+  .due-list{display:flex; flex-direction:column; gap:10px}
+  .due-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line);
+    border-radius:10px; cursor:pointer}
+  .due-row:hover{border-color:var(--accent); background:#fafbff}
+  .due-row .dot{width:12px; height:12px; border-radius:50%; flex:0 0 auto}
+  .due-row .dtitle{font-weight:700; flex:1; min-width:0}
+  .due-row .dcourse{font-size:13px; color:var(--sub); font-weight:600}
+  .due-row .dwhen{font-size:13.5px; color:var(--sub); margin-right:4px; white-space:nowrap}
+  /* 時間割＋課題一覧の2カラム */
+  .tt-layout{display:flex; gap:22px; align-items:flex-start}
+  .tt-main{flex:1 1 auto; min-width:0}
+  .tt-side{flex:0 0 360px; position:sticky; top:84px}
+  @media (max-width:980px){ .tt-layout{flex-direction:column} .tt-side{flex:1 1 auto; width:100%; position:static} }
+  .due-row.is-done{opacity:.62}
+  .due-row.is-done .dtitle{text-decoration:line-through}
+  .due-row .dcheck{width:20px; height:20px; flex:0 0 auto; cursor:pointer}
+  .due-empty{color:var(--sub); font-size:14px; padding:10px 2px}
+  .side-sec{font-size:13px; font-weight:800; color:var(--sub); margin:8px 2px 8px; letter-spacing:.03em}
+  .tbadge{font-size:11.5px; font-weight:800; padding:1px 8px; border-radius:999px}
+  .tbadge.weekly{background:#e7eeff; color:#3a5bd9}
+  .tbadge.spot{background:#fdeede; color:#c5781a}
+
+  .empty{color:var(--sub); text-align:center; padding:24px; font-size:var(--fs-sm)}
+  footer{max-width:1180px; margin:0 auto; padding:0 22px 50px; color:var(--sub); font-size:13px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<header class="app">
+  <h1 onclick="showView('tt')">講義まとめ</h1>
+  <nav class="tabs">
+    <button id="tab-tt" class="active" onclick="showView('tt')">時間割</button>
+    <button class="toolbtn" onclick="exportData()">書き出し</button>
+    <button class="toolbtn" onclick="document.getElementById('importfile').click()">読み込み</button>
+    <input type="file" id="importfile" accept="application/json" class="hidden" onchange="importData(event)">
+  </nav>
+</header>
+
+<main>
+  <section id="view-tt"></section>
+  <section id="view-detail" class="hidden"></section>
+</main>
+<footer>
+  データはこのブラウザ内（localStorage）に自動保存されます。バックアップは「書き出し」でJSONに保存、別端末へは「読み込み」で復元できます。
+  教材フォルダのリンクは各教科の「教科情報を編集」で設定できます（このHTMLと同じ階層のフォルダ名を入れると開けます）。
+</footer>
+
+<script>
+const STORE_KEY = 'kogi-matome-public-v1';
+
+/* ===== 初期データ（公開用：空テンプレート） ===== */
+const SEED = {
+  reportName: "",   // 提出ファイル名の接頭辞（例：学籍番号_氏名）。各教科ページで設定できます
+  courses: []       // 教科は「時間割」の各コマの＋ボタンから追加してください
+};
+
+/* ===== 状態管理 ===== */
+let DATA = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ const d = JSON.parse(raw); migrate(d); return d; }
+  }catch(e){ console.warn(e); }
+  return structuredClone(SEED);
+}
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(DATA)); }
+function migrate(d){
+  (d.courses||[]).forEach(c=>{
+    if(!c.assignments) c.assignments=[];
+    c.assignments.forEach(a=>{
+      if(!a.type) a.type='spot';
+      if(a.type==='weekly' && a.completedFor===undefined) a.completedFor='';
+    });
+    (c.sessions||[]).forEach(s=>{ if(s.no!=null) s.no=String(s.no); }); // 回を文字列化（例：2-1）
+  });
+}
+function esc(s){ return (s??"").toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function getCourse(id){ return DATA.courses.find(c=>c.id===id); }
+/* 「回」は自由テキスト（例：2-1）。数字部分を数値として自然順に並べる */
+function noKey(no){ return String(no).split(/(\d+)/).map(p=>/^\d+$/.test(p)?p.padStart(8,'0'):p); }
+function cmpNo(a,b){ const ka=noKey(a.no), kb=noKey(b.no), n=Math.max(ka.length,kb.length);
+  for(let i=0;i<n;i++){ const x=ka[i]||'', y=kb[i]||''; if(x!==y) return x<y?-1:1; } return 0; }
+
+/* ===== 締切の状態判定 ===== */
+function dueInfo(due, done){
+  if(done) return {cls:'done', label:'完了', main:'完了', sub:''};
+  if(!due) return {cls:'none', label:'期限なし', main:'—', sub:'期限なし'};
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(due+'T00:00:00');
+  const diff=Math.round((d-today)/86400000);
+  let cls='ok';
+  if(diff<0) cls='over'; else if(diff<=3) cls='soon'; else if(diff<=7) cls='warn';
+  let main, sub;
+  if(diff<0){ main='超過'; sub=`${-diff}日`; }
+  else if(diff===0){ main='本日'; sub='締切'; }
+  else { main=`あと${diff}`; sub='日'; }
+  return {cls, main, sub, diff};
+}
+function fmtDate(d){
+  if(!d) return '';
+  const dt=new Date(d+'T00:00:00');
+  const w=['日','月','火','水','木','金','土'][dt.getDay()];
+  return `${dt.getMonth()+1}/${dt.getDate()}(${w})`;
+}
+/* 課題の種類（weekly / spot）に応じた締切・完了の扱い */
+function weekdayIdx(w){ return ['日','月','火','水','木','金','土'].indexOf(w); }
+function toISO(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function nextWeekly(weekday){
+  const i=weekdayIdx(weekday); if(i<0) return null;
+  const t=new Date(); t.setHours(0,0,0,0);
+  const diff=(i-t.getDay()+7)%7;
+  const d=new Date(t); d.setDate(t.getDate()+diff); return d;
+}
+function effDue(a){ if(a.type==='weekly'){ const d=nextWeekly(a.weekday); return d?toISO(d):''; } return a.due||''; }
+function isDone(a){ if(a.type==='weekly') return !!a.completedFor && a.completedFor===effDue(a); return !!a.done; }
+function setDone(a,v){ if(a.type==='weekly'){ a.completedFor = v?effDue(a):''; } else a.done=v; }
+
+/* ===== ビュー切替 ===== */
+function showView(v){
+  document.getElementById('view-tt').classList.toggle('hidden', v!=='tt');
+  document.getElementById('view-detail').classList.toggle('hidden', v!=='detail');
+  document.getElementById('tab-tt').classList.toggle('active', v==='tt');
+  if(v==='tt') renderTimetable();
+  window.scrollTo(0,0);
+}
+
+/* ===== 時間割（2Q）＋ 直近の締切 ===== */
+function renderTimetable(){
+  const el=document.getElementById('view-tt');
+  const days=["月","火","水","木","金"];
+  const periods=[
+    {key:"1-2", label:"1,2限\n8:50〜10:30"},
+    {key:"3-4", label:"3,4限\n10:45〜12:25"},
+    {key:"5-6", label:"5,6限\n13:30〜15:10"},
+    {key:"7-8", label:"7,8限\n15:25〜17:05"},
+    {key:"9-10", label:"9,10限\n17:15〜18:55"},
+  ];
+  const find=(day,pk)=>DATA.courses.find(c=>c.day===day && c.period===pk);
+  const rows=periods.map(p=>{
+    const tds=days.map(d=>{
+      const c=find(d,p.key);
+      if(!c) return `<td><button class="cell-add" title="この時限に教科を追加" onclick="newCourse('${d}','${p.key}')">＋</button></td>`;
+      return `<td class="has"><div class="cell" onclick="openDetail('${c.id}')"
+        style="border-left:4px solid ${c.color}; padding-left:6px">${esc(c.name)}
+        <small>${esc(c.room||(c.zoom?'オンライン':''))}</small></div></td>`;
+    }).join("");
+    return `<tr><td class="period">${esc(p.label).replace(/\n/g,'<br>')}</td>${tds}</tr>`;
+  }).join("");
+
+  const intensive=DATA.courses.filter(c=>c.day==="集中");
+  const intHtml=intensive.length?`<div class="note-int">
+    <b>集中講義：</b> ${intensive.map(c=>`<a style="cursor:pointer;color:var(--accent)" onclick="openDetail('${c.id}')">${esc(c.name)}</a>（${esc(c.time)}・${esc(c.room||'')}）`).join(" / ")}
+  </div>`:"";
+
+  el.innerHTML = `<div class="tt-layout">
+    <div class="tt-main">
+      <h3 class="sec" style="margin-top:0">2Q 時間割<span class="line"></span></h3>
+      <table class="tt">
+        <tr><th style="width:120px">時限</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr>
+        ${rows}
+      </table>${intHtml}
+      <button class="add-course-btn" onclick="newCourse('集中','集中講義')">＋ 教科を追加（集中講義など）</button>
+    </div>
+    <aside class="tt-side">${renderDueSide()}</aside>
+  </div>`;
+}
+
+/* 全教科の課題を締切順に（完了/未完了つき・チェックで切替） */
+function renderDueSide(){
+  const items=[];
+  DATA.courses.forEach(c=>(c.assignments||[]).forEach((a,idx)=>{
+    items.push({c, a, idx, due:effDue(a), done:isDone(a)});
+  }));
+  items.sort((x,y)=>{
+    if(x.done!==y.done) return x.done?1:-1;      // 未完了を上に
+    if(!x.due) return 1; if(!y.due) return -1;    // 期限なしは下に
+    return x.due<y.due?-1:1;                       // 締切が近い順
+  });
+  let body;
+  if(!items.length){
+    body=`<div class="due-empty">課題はまだありません。各教科ページで追加できます。</div>`;
+  }else{
+    body=`<div class="due-list">`+items.map(({c,a,idx,due,done})=>{
+      const di=dueInfo(due, done);
+      return `<div class="due-row ${done?'is-done':''}">
+        <input type="checkbox" class="dcheck" ${done?'checked':''} title="完了/未完了を切替"
+          onclick="event.stopPropagation();toggleAssignComplete('${c.id}',${idx},'tt')">
+        <span class="dtitle" onclick="openDetail('${c.id}')">
+          <span class="tbadge ${a.type==='weekly'?'weekly':'spot'}">${a.type==='weekly'?'毎週':'突発'}</span>
+          ${esc(a.title)}<br><span class="dcourse">${esc(c.name)}</span></span>
+        <span class="dwhen" onclick="openDetail('${c.id}')">${due?fmtDate(due):'—'}</span>
+        <span class="due-pill due-${di.cls}" onclick="openDetail('${c.id}')">${esc(di.main)}<small>${esc(di.sub)}</small></span>
+      </div>`;
+    }).join("")+`</div>`;
+  }
+  return `<div class="due-panel"><h3>📌 締切順 課題一覧</h3>${body}</div>`;
+}
+
+/* ===== 教科 詳細 ===== */
+let CURRENT=null;
+function openDetail(id){ CURRENT=id; renderDetail(); showView('detail'); }
+
+/* ===== 教科の追加・編集・削除 ===== */
+function blankCourse(day, period){
+  return {id:'c'+Date.now(), name:'', color:'#3a5bd9', group:'', credits:1,
+    day:day||'月', period:period||'1-2', time:'', room:'', zoom:null, folder:null,
+    assignments:[], sessions:[]};
+}
+function newCourse(day, period){ showCourseForm(blankCourse(day, period), true); }
+function editCourse(cid){ showCourseForm(getCourse(cid), false); }
+
+function showCourseForm(m, isNew){
+  const el=document.getElementById('view-detail');
+  const days=['月','火','水','木','金','集中'];
+  const periods=['1-2','3-4','5-6','7-8','9-10','集中講義'];
+  const z=m.zoom||{url:'',id:'',pass:''};
+  const cancel = isNew ? "showView('tt')" : `openDetail('${m.id}')`;
+  el.innerHTML=`
+    <button class="back" onclick="${cancel}">← 戻る</button>
+    <div class="detail-head"><h2>${isNew?'教科を追加':'教科情報を編集'}</h2></div>
+    <div class="form">
+      <div class="fr">
+        <label class="grow">教科名<input type="text" id="c-name" value="${esc(m.name)}" placeholder="例：EDA（エンジニアリングデザインA）"></label>
+        <label class="w-sm">色<input type="color" id="c-color" value="${esc(m.color||'#3a5bd9')}"></label>
+      </div>
+      <div class="fr">
+        <label class="grow">区分 / 群<input type="text" id="c-group" value="${esc(m.group)}" placeholder="例：専門科目 B / GA1M"></label>
+        <label class="w-sm">単位<input type="text" id="c-credits" value="${esc(m.credits)}"></label>
+      </div>
+      <div class="fr">
+        <label class="w-md">曜日<select id="c-day">${days.map(d=>`<option ${d===m.day?'selected':''}>${d}</option>`).join('')}</select></label>
+        <label class="w-md">時限<select id="c-period">${periods.map(p=>`<option ${p===m.period?'selected':''}>${p}</option>`).join('')}</select></label>
+        <label class="grow">時間<input type="text" id="c-time" value="${esc(m.time)}" placeholder="例：13:30〜15:10 / 8/31〜9/2"></label>
+      </div>
+      <div class="fr">
+        <label class="full">場所<input type="text" id="c-room" value="${esc(m.room||'')}" placeholder="例：W9-325 / オンライン"></label>
+      </div>
+      <div class="fr">
+        <label class="full">教材フォルダ名（任意・このHTMLと同じ階層）<input type="text" id="c-folder" value="${esc(m.folder||'')}" placeholder="例：3_水910_EDA"></label>
+      </div>
+      <div class="fr">
+        <label class="full">Zoom URL（任意・空欄なら非表示）<input type="text" id="c-zurl" value="${esc(z.url)}"></label>
+      </div>
+      <div class="fr">
+        <label class="w-md">Zoom ID<input type="text" id="c-zid" value="${esc(z.id)}"></label>
+        <label class="w-md">パスコード<input type="text" id="c-zpass" value="${esc(z.pass)}"></label>
+      </div>
+      <div class="formbtns">
+        <button class="btn-primary" onclick="saveCourse('${m.id}',${isNew})">保存</button>
+        <button class="btn-ghost" onclick="${cancel}">キャンセル</button>
+      </div>
+    </div>`;
+  showView('detail');
+}
+function saveCourse(id, isNew){
+  const g=x=>document.getElementById(x).value;
+  const zurl=g('c-zurl').trim();
+  const rec={
+    name:g('c-name').trim()||'（無題）',
+    color:g('c-color'),
+    group:g('c-group').trim(),
+    credits:g('c-credits').trim(),
+    day:g('c-day'), period:g('c-period'),
+    time:g('c-time').trim(),
+    room:g('c-room').trim(),
+    folder:g('c-folder').trim()||null,
+    zoom: zurl ? {url:zurl, id:g('c-zid').trim(), pass:g('c-zpass').trim()} : null
+  };
+  if(isNew) DATA.courses.push({id, ...rec, assignments:[], sessions:[]});
+  else Object.assign(getCourse(id), rec);
+  save(); openDetail(id);
+}
+function deleteCourse(id){
+  if(!confirm('この教科を削除しますか？（授業記録・課題もすべて消えます）')) return;
+  DATA.courses=DATA.courses.filter(c=>c.id!==id); save(); showView('tt');
+}
+function editReportName(){
+  const v=prompt('提出ファイル名の接頭辞（学籍番号_氏名）', DATA.reportName);
+  if(v!==null){ DATA.reportName=v.trim(); save(); renderDetail(); }
+}
+
+function renderDetail(){
+  const c=getCourse(CURRENT);
+  const el=document.getElementById('view-detail');
+  const reportPattern=`${DATA.reportName}_${c.name}_第〇回.pdf`;
+
+  let info=`
+    <div class="infobox"><div class="lab">時間</div><div class="val">${esc(c.day)}曜 ${esc(c.period)}限　${esc(c.time)}</div></div>
+    <div class="infobox"><div class="lab">区分 / 単位</div><div class="val">${esc(c.group)} ・ ${c.credits}単位</div></div>
+    <div class="infobox"><div class="lab">場所</div><div class="val">${esc(c.room||"—")}</div></div>`;
+  if(c.zoom){
+    info+=`<div class="infobox"><div class="lab">Zoom</div><div class="val">
+      <a href="${esc(c.zoom.url)}" target="_blank" rel="noopener">ミーティングを開く ↗</a><br>
+      ID: ${esc(c.zoom.id)}　Pass: ${esc(c.zoom.pass)}
+      <button class="copybtn" onclick="copyText('${esc(c.zoom.pass)}')">passコピー</button>
+    </div></div>`;
+  }
+  if(c.folder){
+    info+=`<div class="infobox"><div class="lab">教材フォルダ</div><div class="val">
+      <a href="${encodeURI(c.folder)}" target="_blank">${esc(c.folder)} ↗</a></div></div>`;
+  }
+  info+=`<div class="infobox"><div class="lab">提出ファイル名</div><div class="val" style="font-size:15px">
+      ${esc(reportPattern)}
+      <button class="copybtn" onclick="copyText('${esc(reportPattern)}')">コピー</button>
+      <button class="copybtn" onclick="editReportName()">接頭辞を編集</button>
+    </div></div>`;
+
+  const sessionCards=[...c.sessions].sort(cmpNo).map(s=>
+    (EDIT_SESSION!=null && String(s.no)===String(EDIT_SESSION))
+      ? sessionFormHtml(c.id, s, false)
+      : sessionViewHtml(c, s)
+  ).join("");
+
+  el.innerHTML=`
+    <button class="back" onclick="showView('tt')">← 時間割へ</button>
+    <div class="detail-head">
+      <h2 style="border-left:6px solid ${c.color}; padding-left:14px">${esc(c.name)}</h2>
+      <div class="head-acts">
+        <button onclick="editCourse('${c.id}')">✎ 教科情報を編集</button>
+        <button class="del" onclick="deleteCourse('${c.id}')">削除</button>
+      </div>
+    </div>
+    <div class="infogrid">${info}</div>
+
+    <div class="assign-wrap">
+      <div class="ahead"><h3>📌 課題・レポート</h3><span class="pill">${c.assignments.filter(a=>!isDone(a)).length} 件 未完了</span></div>
+      <div id="assignForm"></div>
+      ${renderAssignList(c)}
+      <button class="addbtn small" onclick="newAssignment('${c.id}')">＋ 課題を追加</button>
+    </div>
+
+    <h3 class="sec">授業の記録<span class="line"></span></h3>
+    ${sessionCards || (EDIT_SESSION==='__new__' ? '' : '<div class="empty">まだ記録がありません。「＋ 回を追加」から記録を始めましょう。</div>')}
+    ${ EDIT_SESSION==='__new__'
+        ? sessionFormHtml(c.id, blankNewSession(c), true)
+        : `<button class="addbtn" onclick="newSession('${c.id}')">＋ 回を追加</button>` }`;
+}
+
+/* ===== 課題・レポート ===== */
+function renderAssignList(c){
+  if(!c.assignments.length) return `<div class="empty">課題はまだありません。下のボタンから追加できます。</div>`;
+  const group=(pred)=>c.assignments.map((a,idx)=>({a,idx})).filter(x=>pred(x.a))
+    .sort((x,y)=>{
+      if(isDone(x.a)!==isDone(y.a)) return isDone(x.a)?1:-1;
+      const dx=effDue(x.a), dy=effDue(y.a);
+      if(!dx) return 1; if(!dy) return -1; return dx<dy?-1:1;
+    })
+    .map(({a,idx})=>assignCard(c,a,idx)).join("");
+  const weekly=group(a=>a.type==='weekly');
+  const spot=group(a=>a.type!=='weekly');
+  return `${weekly?`<div class="side-sec">毎週定刻までに提出</div>${weekly}`:''}${spot?`<div class="side-sec">突発的な課題</div>${spot}`:''}`;
+}
+function assignCard(c,a,idx){
+  const done=isDone(a), di=dueInfo(effDue(a), done);
+  const whenLine = a.type==='weekly'
+    ? `<div class="aduedate">毎週 ${esc(a.weekday)}曜 ${esc(a.time||'')}まで　次回：${esc(fmtDate(effDue(a)))}</div>`
+    : (a.due?`<div class="aduedate">期限：${esc(fmtDate(a.due))}（${esc(a.due)}）</div>`:`<div class="aduedate">期限なし</div>`);
+  const toggleLabel = a.type==='weekly'
+    ? (done?'今週分を未完了に':'今週分を完了に')
+    : (done?'未完了に戻す':'完了にする');
+  return `<div class="assign ${done?'is-done':''}">
+    <div class="acolor" style="background:${c.color}"></div>
+    <div class="amain">
+      <div class="atitle"><span class="tbadge ${a.type==='weekly'?'weekly':'spot'}">${a.type==='weekly'?'毎週':'突発'}</span> ${esc(a.title)}</div>
+      ${whenLine}
+      ${a.note?`<div class="anote">${esc(a.note)}</div>`:''}
+    </div>
+    <div class="due-pill due-${di.cls}">${esc(di.main)}<small>${esc(di.sub)}</small></div>
+    <div class="aacts">
+      <button onclick="toggleAssignComplete('${c.id}',${idx},'detail')">${toggleLabel}</button>
+      <button onclick="editAssignment('${c.id}',${idx})">編集</button>
+      <button class="del" onclick="deleteAssignment('${c.id}',${idx})">削除</button>
+    </div>
+  </div>`;
+}
+function newAssignment(cid){ showAssignForm(cid, {type:'spot', title:"", due:"", weekday:"月", time:"", note:""}, null); }
+function editAssignment(cid, idx){
+  const a=getCourse(cid).assignments[idx];
+  showAssignForm(cid, {type:a.type||'spot', title:a.title||'', due:a.due||'', weekday:a.weekday||'月', time:a.time||'', note:a.note||''}, idx);
+}
+function showAssignForm(cid, a, idx){
+  const holder=document.getElementById('assignForm');
+  const days=['月','火','水','木','金','土','日'];
+  holder.innerHTML=`
+    <div class="form">
+      <div class="fr">
+        <label class="w-md">種類
+          <select id="a-type" onchange="toggleAssignFields()">
+            <option value="spot" ${a.type!=='weekly'?'selected':''}>突発的な課題（単発）</option>
+            <option value="weekly" ${a.type==='weekly'?'selected':''}>毎週定刻まで（繰返し）</option>
+          </select></label>
+        <label class="grow">課題名<input type="text" id="a-title" value="${esc(a.title)}" placeholder="例：第2回レポート / 中間プレゼン"></label>
+      </div>
+      <div class="fr" id="a-spot-fields">
+        <label class="w-md">期限<input type="date" id="a-due" value="${esc(a.due)}"></label>
+      </div>
+      <div class="fr" id="a-weekly-fields">
+        <label class="w-md">締切曜日<select id="a-weekday">${days.map(d=>`<option ${d===a.weekday?'selected':''}>${d}</option>`).join('')}</select></label>
+        <label class="w-md">締切時刻<input type="text" id="a-time" value="${esc(a.time)}" placeholder="例：17:15"></label>
+      </div>
+      <div class="fr">
+        <label class="full">メモ<textarea id="a-note" placeholder="提出形式・分量・条件など">${esc(a.note)}</textarea></label>
+      </div>
+      <div class="formbtns">
+        <button class="btn-primary" onclick="saveAssignment('${cid}',${idx===null?'null':idx})">保存</button>
+        <button class="btn-ghost" onclick="renderDetail()">キャンセル</button>
+      </div>
+    </div>`;
+  toggleAssignFields();
+  holder.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function toggleAssignFields(){
+  const t=document.getElementById('a-type').value;
+  document.getElementById('a-spot-fields').style.display = t==='weekly'?'none':'flex';
+  document.getElementById('a-weekly-fields').style.display = t==='weekly'?'flex':'none';
+}
+function saveAssignment(cid, idx){
+  const c=getCourse(cid);
+  const type=document.getElementById('a-type').value;
+  const base={ type, title:document.getElementById('a-title').value.trim()||"（無題の課題）", note:document.getElementById('a-note').value };
+  let rec;
+  if(type==='weekly'){
+    const prev=(idx!==null && c.assignments[idx].type==='weekly') ? (c.assignments[idx].completedFor||"") : "";
+    rec={...base, weekday:document.getElementById('a-weekday').value, time:document.getElementById('a-time').value.trim(), completedFor:prev};
+  }else{
+    const prev=(idx!==null && c.assignments[idx].type!=='weekly') ? !!c.assignments[idx].done : false;
+    rec={...base, due:document.getElementById('a-due').value, done:prev};
+  }
+  if(idx===null) c.assignments.push(rec); else c.assignments[idx]=rec;
+  save(); renderDetail();
+}
+function deleteAssignment(cid, idx){
+  if(!confirm('この課題を削除しますか？')) return;
+  getCourse(cid).assignments.splice(idx,1); save(); renderDetail();
+}
+function toggleAssignComplete(cid, idx, where){
+  const a=getCourse(cid).assignments[idx];
+  setDone(a, !isDone(a)); save();
+  if(where==='tt') renderTimetable(); else renderDetail();
+}
+
+/* ===== 授業の記録 ===== */
+let EDIT_SESSION=null;   // 編集中の回番号（文字列）／新規は '__new__'／非編集は null
+
+/* 表示カード（各回に 授業内容メモ・課題・グループワークまとめ を整列） */
+function sessionViewHtml(c, s){
+  const seg=(icon,label,val)=> val!==undefined
+    ? `<div class="content"><span class="seg-h">${icon} ${label}</span>${esc(val)||'<span class="muted">（未記入）</span>'}</div>` : '';
+  return `<div class="session">
+    <div class="shead">
+      <span class="no">第${esc(String(s.no))}回</span>
+      <span class="date">${esc(s.date||"日付未設定")}</span>
+      <span class="place">${esc(s.place||"")}</span>
+      <span class="sub-tag ${s.submitted?'done':'todo'}">${s.submitted?'レポート提出済み':'レポート未提出'}</span>
+    </div>
+    ${seg('📝','授業内容メモ', s.content!==undefined?s.content:'')}
+    ${seg('📌','課題', s.task)}
+    ${seg('👥','グループワークまとめ', s.group)}
+    <div class="actions">
+      <button onclick="editSession('${c.id}','${esc(String(s.no))}')">編集</button>
+      <button onclick="toggleSubmit('${c.id}','${esc(String(s.no))}')">${s.submitted?'未提出に戻す':'提出済みにする'}</button>
+      <button class="del" onclick="deleteSession('${c.id}','${esc(String(s.no))}')">削除</button>
+    </div>
+  </div>`;
+}
+
+/* 編集フォーム（その場でインライン表示） */
+function sessionFormHtml(cid, s, isNew){
+  const hasTask = s.task!==undefined, hasGroup = s.group!==undefined;
+  return `<div class="form session-edit">
+    <div class="fr">
+      <label class="w-md">回（第◯回の◯）<input type="text" id="f-no" value="${esc(String(s.no))}" placeholder="例：2-1"></label>
+      <label class="w-md">日付<input type="date" id="f-date" value="${esc(s.date||'')}"></label>
+      <label style="flex:1">場所<input type="text" id="f-place" value="${esc(s.place||'')}"></label>
+    </div>
+    <div class="fr"><div style="font-size:13px;color:var(--sub);margin-top:-4px">※「回」は自由入力。<b>2-1</b> のように番号の間に文字を入れられます（例：<b>2-1＝授業用 / 2-2＝課題用</b>）。</div></div>
+    <div class="fr seg-toggle">
+      <span class="lab">記録セクション（チェックで追加／外して取消）：</span>
+      <label class="checkrow"><input type="checkbox" checked disabled> 📝 授業内容メモ</label>
+      <label class="checkrow"><input type="checkbox" id="f-has-task" ${hasTask?'checked':''} onchange="toggleSeg('task')"> 📌 課題</label>
+      <label class="checkrow"><input type="checkbox" id="f-has-group" ${hasGroup?'checked':''} onchange="toggleSeg('group')"> 👥 グループワークまとめ</label>
+    </div>
+    <div class="fr"><label class="full"><span class="seg-h">📝 授業内容メモ</span>
+      <textarea id="f-content" style="min-height:220px;resize:vertical" placeholder="授業内容、気づき など">${esc(s.content||'')}</textarea></label></div>
+    <div class="fr seg-task ${hasTask?'':'hidden'}"><label class="full"><span class="seg-h">📌 課題</span>
+      <textarea id="f-task" style="min-height:130px;resize:vertical" placeholder="この回で出た課題・締切・提出方法・分量 など">${esc(hasTask?s.task:'')}</textarea></label></div>
+    <div class="fr seg-group ${hasGroup?'':'hidden'}"><label class="full"><span class="seg-h">👥 グループワークまとめ</span>
+      <textarea id="f-group" style="min-height:130px;resize:vertical" placeholder="班・役割・議論・結論・次のアクション など">${esc(hasGroup?s.group:'')}</textarea></label></div>
+    <div class="fr"><label class="checkrow"><input type="checkbox" id="f-sub" ${s.submitted?'checked':''}>毎週レポート提出済み</label></div>
+    <div class="formbtns">
+      <button class="btn-primary" onclick="saveSession('${cid}',${isNew?'null':`'${esc(String(s.no))}'`})">保存</button>
+      <button class="btn-ghost" onclick="cancelEdit()">キャンセル</button>
+    </div>
+  </div>`;
+}
+function toggleSeg(name){
+  const chk=document.getElementById('f-has-'+name);
+  const box=document.querySelector('.session-edit .seg-'+name);
+  if(box) box.classList.toggle('hidden', !chk.checked);
+}
+function blankNewSession(c){
+  const maxInt=c.sessions.reduce((m,s)=>{ const n=parseInt(String(s.no),10); return isNaN(n)?m:Math.max(m,n); },0);
+  return {no:String(maxInt+1), date:"", place:c.zoom?"オンライン":(c.room||""), content:"", submitted:false};
+}
+function newSession(cid){ CURRENT=cid; EDIT_SESSION='__new__'; renderDetail(); afterRenderFocus(); }
+function editSession(cid, no){ CURRENT=cid; EDIT_SESSION=String(no); renderDetail(); afterRenderFocus(); }
+function cancelEdit(){ EDIT_SESSION=null; renderDetail(); }
+function afterRenderFocus(){
+  const f=document.querySelector('.session-edit');
+  if(f) f.scrollIntoView({behavior:'smooth', block:'nearest'});  // 画面内なら動かさない＝その場編集
+}
+function saveSession(cid, origNo){
+  const c=getCourse(cid);
+  const g=id=>document.getElementById(id);
+  const rec={
+    no:(g('f-no').value.trim())||String(c.sessions.length+1),
+    date:g('f-date').value,
+    place:g('f-place').value.trim(),
+    content:g('f-content').value,
+    submitted:g('f-sub').checked
+  };
+  if(g('f-has-task').checked)  rec.task  = g('f-task').value;   // チェックされた回のみ保持
+  if(g('f-has-group').checked) rec.group = g('f-group').value;
+  if(origNo===null) c.sessions.push(rec);
+  else { const i=c.sessions.findIndex(x=>String(x.no)===String(origNo)); if(i>=0) c.sessions[i]=rec; else c.sessions.push(rec); }
+  EDIT_SESSION=null; save(); renderDetail();
+}
+function deleteSession(cid, no){
+  if(!confirm(`第${no}回の記録を削除しますか？`)) return;
+  const c=getCourse(cid); c.sessions=c.sessions.filter(x=>String(x.no)!==String(no));
+  EDIT_SESSION=null; save(); renderDetail();
+}
+function toggleSubmit(cid, no){
+  const s=getCourse(cid).sessions.find(x=>String(x.no)===String(no)); s.submitted=!s.submitted; save(); renderDetail();
+}
+
+/* ===== ユーティリティ ===== */
+function copyText(t){ navigator.clipboard.writeText(t).then(()=>toast('コピーしました')); }
+function toast(msg){
+  const d=document.createElement('div'); d.textContent=msg;
+  d.style.cssText="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1c2230;color:#fff;padding:10px 22px;border-radius:999px;font-size:15px;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.25)";
+  document.body.appendChild(d); setTimeout(()=>d.remove(),1500);
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='講義まとめ_backup.json'; a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ DATA=JSON.parse(r.result); migrate(DATA); save(); showView('tt'); toast('読み込みました'); }
+    catch(e){ alert('読み込みに失敗しました：'+e.message); } };
+  r.readAsText(f); ev.target.value='';
+}
+
+/* 初期描画 */
+renderTimetable();
+</script>
+</body>
+</html>
